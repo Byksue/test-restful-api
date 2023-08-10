@@ -12,13 +12,15 @@ use Illuminate\Support\Facades\Auth;
 
 class AbsensiController extends Controller
 {
-    public function absenMasuk() : JsonResponse {
-        $check = Epresence::where('user_id', Auth::user()->id)->where('type', 'IN')->whereDate('time', date('Y-m-d'))->exists();
+    public function absenPegawai(Request $request) : JsonResponse {
+        $check = Epresence::where('user_id', Auth::user()->id)->where('type', $request->type)->whereDate('time', date('Y-m-d', strtotime($request->time)))->exists();
 
         if($check) {
+            $type = ($request->type == 'IN') ? 'masuk' : 'keluar';
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'Anda sudah melakukan absensi masuk hari ini',
+                'message' => 'Anda sudah melakukan absensi ' . $type . ' hari ini',
                 'data' => null
             ], 400);
         }
@@ -27,9 +29,9 @@ class AbsensiController extends Controller
         try {
             Epresence::create([
                 'user_id' => Auth::user()->id,
-                'type' => 'IN',
+                'type' => $request->type,
                 'is_approved' => 'FALSE',
-                'time' => Carbon::now(),
+                'time' => Carbon::parse($request->time)->format('Y-m-d H:i:s'),
             ]);
             DB::commit();
 
@@ -48,41 +50,41 @@ class AbsensiController extends Controller
         }
     }
 
-    public function absenKeluar() : JsonResponse {
-        $check = Epresence::where('user_id', Auth::user()->id)->where('type', 'OUT')->whereDate('time', date('Y-m-d'))->exists();
+    // public function absenKeluar() : JsonResponse {
+    //     $check = Epresence::where('user_id', Auth::user()->id)->where('type', 'OUT')->whereDate('time', date('Y-m-d'))->exists();
 
-        if($check) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Anda sudah melakukan absensi keluar hari ini',
-                'data' => null
-            ], 400);
-        }
+    //     if($check) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Anda sudah melakukan absensi keluar hari ini',
+    //             'data' => null
+    //         ], 400);
+    //     }
 
-        DB::beginTransaction();
-        try {
-            Epresence::create([
-                'user_id' => Auth::user()->id,
-                'type' => 'OUT',
-                'is_approved' => 'FALSE',
-                'time' => Carbon::now(),
-            ]);
-            DB::commit();
+    //     DB::beginTransaction();
+    //     try {
+    //         Epresence::create([
+    //             'user_id' => Auth::user()->id,
+    //             'type' => 'OUT',
+    //             'is_approved' => 'FALSE',
+    //             'time' => Carbon::now(),
+    //         ]);
+    //         DB::commit();
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Absensi berhasil dilakukan',
-                'data' => null
-            ], 200);
-        } catch (\Throwable $th) {
-            DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $th->getMessage(),
-                'data' => null
-            ], 500);
-        }
-    }
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Absensi berhasil dilakukan',
+    //             'data' => null
+    //         ], 200);
+    //     } catch (\Throwable $th) {
+    //         DB::rollback();
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $th->getMessage(),
+    //             'data' => null
+    //         ], 500);
+    //     }
+    // }
 
     public function rekapAbsensiPegawai($pegawai_id) : JsonResponse {
         $absensiData = DB::table('epresences')

@@ -22,8 +22,8 @@ Route::middleware('auth:sanctum')->group(function(){
 
     // Absensi
     Route::middleware('role:supervisor|employee')->group(function(){
-        Route::post('/absen-masuk', [\App\Http\Controllers\AbsensiController::class, 'absenMasuk']);
-        Route::post('/absen-keluar', [\App\Http\Controllers\AbsensiController::class, 'absenKeluar']);
+        Route::post('/absen-pegawai', [\App\Http\Controllers\AbsensiController::class, 'absenPegawai']);
+        // Route::post('/absen-keluar', [\App\Http\Controllers\AbsensiController::class, 'absenKeluar']);
         Route::get('/rekap-absensi/{pegawai_id}', [\App\Http\Controllers\AbsensiController::class, 'rekapAbsensiPegawai']);
     });
 
